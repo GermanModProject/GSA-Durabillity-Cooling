@@ -53,7 +53,7 @@ namespace GSA.Durability
         public string displayPressure;
 
         /// <summary>
-        /// Display Temperature
+        /// Display Engine
         /// </summary>
         [KSPField(isPersistant = false, guiActive = true, guiName = "[D]Engine")]
         public string displayEngine;
@@ -65,7 +65,7 @@ namespace GSA.Durability
         public string displayGeeForce;
 
         /// <summary>
-        /// Display GeeForce
+        /// Display TempM
         /// </summary>
         [KSPField(isPersistant = false, guiActive = true, guiName = "[D]Temp")]
         public string displayTempM;
@@ -185,6 +185,12 @@ namespace GSA.Durability
         [KSPField(isPersistant = true, guiActive = false, guiName = "lastReduceRange ")]
         public double lastReduceRange = 0;
 
+        /// <summary>
+        /// Part will cooling
+        /// </summary>
+        [KSPField(isPersistant = true)]
+        public bool cooling;
+
         #endregion //KSPFields
 
         #region Private Fields
@@ -249,6 +255,21 @@ namespace GSA.Durability
                 myWindow.displayDirty = true;
         }
 
+        [KSPEvent(guiName = "Cooling", guiActive = true)]
+        public void ToggleCooling()
+        {
+            cooling = !cooling;
+            foreach(Part vpart in vessel.Parts)
+            {
+                if (vpart.Modules.Contains("CoolingPumpModule"))
+                {
+                    PartModule coolingPumpModule = vpart.Modules["CoolingPumpModule"];
+                    coolingPumpModule.GetType().GetMethod("ReInitCooling").Invoke(coolingPumpModule, null);
+                    break;
+                }
+            }
+        }
+
         #endregion //KSPEvent
 
         #region Public override methods
@@ -305,7 +326,7 @@ namespace GSA.Durability
                 _currentWear = basicWear.Evaluate((float)quality);
                 _lastUpdateTime = vessel.missionTime;
                 _sun = Planetarium.fetch.Sun;
-                //gameObject.AddComponent(typeof(LineRenderer));
+                //gameObject.AddComponent(typeof(LineRenderer));               
 
                 if (part.Modules.Contains("ModuleCommand"))
                 {
@@ -350,7 +371,6 @@ namespace GSA.Durability
 
         public override void OnUpdate()
         {
-            base.OnUpdate();
             if (_isFirst)
             {
                 _isFirst = false;
@@ -459,7 +479,7 @@ namespace GSA.Durability
             }
         }
 
-        public float GetModuleCost()
+        public float GetModuleCost(float cost)
         {
             return calculateCost();
         }
@@ -583,6 +603,7 @@ namespace GSA.Durability
                 return;
             try
             {
+                //Repair
                 if (_displayDurability < 99 && canRepair && quality > 0.01 && (maxRepair > 0 || maxRepair == -1))
                 {
                     Events["RepairDamage"].guiName = "Repair";
@@ -600,6 +621,16 @@ namespace GSA.Durability
                 else
                 {
                     Events["RepairDamage"].guiName = "No Damage";
+                }
+
+                //Cooling
+                if (cooling)
+                {
+                    Events["ToggleCooling"].guiName = "Cooling On";
+                }
+                else
+                {
+                    Events["ToggleCooling"].guiName = "Cooling Off";
                 }
             }
             catch (Exception ex)
