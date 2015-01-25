@@ -32,7 +32,7 @@ namespace GSA.Durability
         private GUIStyle _labelTxtRight;
         private GUIStyle _window;
 
-        private ApplicationLauncherButton _launcherButton = null;
+        private static ApplicationLauncherButton _launcherButton = null;
 
         private Texture2D _durabilityButtonTexture = null;
         private Texture2D _durabilityButtonIdle = new Texture2D(38, 38, TextureFormat.ARGB32, false);
@@ -46,8 +46,8 @@ namespace GSA.Durability
         {
             // Create the button in the KSP AppLauncher
             if (_launcherButton == null)
-            {                
-                GSA.Durability.Debug.Log("GSA Durability Overview: Building ApplicationLauncherButton");
+            {
+                GSA.Durability.Debug.Log("[GSA Durablity] VesselOverview->OnGUIApplicationLauncherReady: set _launcherButton");
                 _launcherButton = ApplicationLauncher.Instance.AddModApplication(UIToggle, UIToggle,
                                                                             null, null,
                                                                             null, null,
@@ -56,18 +56,22 @@ namespace GSA.Durability
             }
         }
 
+        private void OnGUIApplicationLauncherDestroyed()
+        {
+            launcherButtonRemove();
+        }
+
         public void UIToggle()
         {
             if (!_hideWindows)
             {
                 _hideWindows = true;
-                //save_plugin_settings();
-                GSA.Durability.Debug.Log("GSA Durability Overview: hide all Windows");
+                GSA.Durability.Debug.Log("[GSA Durablity] VesselOverview->UIToggle: hide Window");
             }
             else
             {
                 _hideWindows = false;
-                GSA.Durability.Debug.Log("GSA Durability Overview: show all Windows");
+                GSA.Durability.Debug.Log("[GSA Durablity] VesselOverview->UIToggle: show Window");
             }
         }
 
@@ -76,11 +80,11 @@ namespace GSA.Durability
             if (_launcherButton != null)
             {
                 ApplicationLauncher.Instance.RemoveModApplication(_launcherButton);
-                GSA.Durability.Debug.Log("GSA Durability Overview: launcherButtonRemove");
+                GSA.Durability.Debug.Log("[GSA Durablity] VesselOverview->launcherButtonRemove: RemoveModApplication");
             }
             else
             {
-                GSA.Durability.Debug.Log("GSA Durability Overview: launcherButtonRemove (useless attempt)");
+                GSA.Durability.Debug.Log("[GSA Durablity] VesselOverview->launcherButtonRemove: _launcherButton is null");
             }
         }
         public void OnSceneChangeRequest(GameScenes _scene)
@@ -133,6 +137,7 @@ namespace GSA.Durability
             }
 
             GameEvents.onGUIApplicationLauncherReady.Add(OnGUIApplicationLauncherReady);
+            GameEvents.onGUIApplicationLauncherDestroyed.Add(OnGUIApplicationLauncherDestroyed);
             GameEvents.onGameSceneLoadRequested.Add(OnSceneChangeRequest);
         }
 

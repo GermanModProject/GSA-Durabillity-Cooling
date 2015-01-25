@@ -31,7 +31,7 @@ namespace GSA.Durability
                 {
                     foreach (UIPartActionWindow window in FindObjectsOfType(typeof(UIPartActionWindow)))
                     {
-                        if (window.part == part) _myWindow = window;                     
+                        if (window.part == part) _myWindow = window;
                     }
                 }
                 return _myWindow;
@@ -99,6 +99,12 @@ namespace GSA.Durability
         /// </summary>
         [KSPField(isPersistant = false, guiActive = true, guiName = "Expiry ", guiUnits = "", guiFormat = "F0")]
         public string displayTime;
+
+        /// <summary>
+        /// Cooling Property
+        /// </summary>
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Cooling Property", guiUnits = "", guiFormat = "F0")]
+        public float coolingProperty = -10f;
 
         /// <summary>
         /// Quality from Part 0.0f - 1.0f; Default: 0.5f 
@@ -259,7 +265,7 @@ namespace GSA.Durability
         public void ToggleCooling()
         {
             cooling = !cooling;
-            foreach(Part vpart in vessel.Parts)
+            foreach (Part vpart in vessel.Parts)
             {
                 if (vpart.Modules.Contains("CoolingPumpModule"))
                 {
@@ -301,72 +307,96 @@ namespace GSA.Durability
         public override void OnStart(StartState state)
         {
             GSA.Durability.Debug.Log("GSA Durability: [OnStart][" + state.ToString() + "]: " + this.name);
-            base.OnStart(state);
+            _state = state;
+
             try
             {
-                _state = state;
                 AvailablePart currentPartInfo = PartLoader.getPartInfoByName(part.name.Replace("(Clone)", ""));
                 _initCost = currentPartInfo.cost;
-                if (state == StartState.Editor)
-                {
-                    return;
-                }
-                if (part.Resources.Contains("Quality"))
-                {
-                    quality = (part.Resources["Quality"].amount / (part.Resources["Quality"].maxAmount / 100)) / 100;
-                }
-
-                if (basicWear.findCurveMinMaxInterations == 0)
-                {
-                    basicWear = new FloatCurve();
-                    basicWear.Add(0.1f, 0.69f);
-                    basicWear.Add(0.5f, 0.000181f);
-                    basicWear.Add(1f, 0.00001f);
-                }
-                _currentWear = basicWear.Evaluate((float)quality);
-                _lastUpdateTime = vessel.missionTime;
-                _sun = Planetarium.fetch.Sun;
-                //gameObject.AddComponent(typeof(LineRenderer));               
-
-                if (part.Modules.Contains("ModuleCommand"))
-                {
-                    _command = (ModuleCommand)part.Modules["ModuleCommand"];
-                    GSA.Durability.Debug.Log("GSA Durability: [OnStart]: _command = " + _command.name);
-                }
-
-                if (part.Modules.Contains("ModuleReactionWheel"))
-                {
-                    _reactionWheel = (ModuleReactionWheel)part.Modules["ModuleReactionWheel"];
-                    GSA.Durability.Debug.Log("GSA Durability: [OnStart]: _reactionWheel = " + _reactionWheel.name);
-                }
-
-                if (part.Modules.Contains("ModuleEngines"))
-                {
-                    _engine = (ModuleEngines)part.Modules["ModuleEngines"];
-                    GSA.Durability.Debug.Log("GSA Durability: [OnStart]: _engine = " + _engine.name);
-                }
-                if (part.Modules.Contains("ModuleScienceExperiment"))
-                {
-                    _scienceExperiment = (ModuleScienceExperiment)part.Modules["ModuleScienceExperiment"];
-                    GSA.Durability.Debug.Log("GSA Durability: [OnStart]: _scienceExperiment = " + _scienceExperiment.name);
-                }
-
-                checkStatus();
-                setEventLabel();
             }
             catch (Exception ex)
             {
-                GSA.Durability.Debug.LogError("GSA Durability: [OnStart]: Message: " + ex.Message);
-                GSA.Durability.Debug.LogError("GSA Durability: [OnStart]: StackTrace: " + ex.StackTrace);
+                GSA.Durability.Debug.LogError("GSA Durability: [OnStart] set _initCost: Message: " + ex.Message);
+                GSA.Durability.Debug.LogError("GSA Durability: [OnStart] set _initCost: StackTrace: " + ex.StackTrace);
             }
 
-            GSA.Durability.Debug.Log("GSA Durability: [OnStart]: quality:" + quality.ToString());
-            GSA.Durability.Debug.Log("GSA Durability: [OnStart]: damageRate: " + _currentWear.ToString("0.000000"));
-            GSA.Durability.Debug.Log("GSA Durability: [OnStart]: vessel.missionTime: " + vessel.missionTime.ToString());
-            GSA.Durability.Debug.Log("GSA Durability: [OnStart]: lastReduceRange: " + lastReduceRange.ToString());
-            GSA.Durability.Debug.Log("GSA Durability: [OnStart]: lastUpdateTime: " + _lastUpdateTime.ToString());
-            GSA.Durability.Debug.Log("GSA Durability: [OnStart]: maxRepair: " + maxRepair.ToString());
-            GSA.Durability.Debug.Log("GSA Durability: [OnStart]: canRepair: " + canRepair.ToString());
+            if (state == StartState.Editor)
+            {
+                return;
+            }
+
+            if (part.Resources.Contains("Quality"))
+            {
+                quality = (part.Resources["Quality"].amount / (part.Resources["Quality"].maxAmount / 100)) / 100;
+            }
+
+            if (basicWear.findCurveMinMaxInterations == 0)
+            {
+                basicWear = new FloatCurve();
+                basicWear.Add(0.1f, 0.69f);
+                basicWear.Add(0.5f, 0.000181f);
+                basicWear.Add(1f, 0.00001f);
+            }
+
+            _currentWear = basicWear.Evaluate((float)quality);
+            _lastUpdateTime = vessel.missionTime;
+            _sun = Planetarium.fetch.Sun;
+            //gameObject.AddComponent(typeof(LineRenderer));               
+
+            if (part.Modules.Contains("ModuleCommand"))
+            {
+                try
+                {
+                    _command = (ModuleCommand)part.Modules["ModuleCommand"];
+                }
+                catch (Exception ex)
+                {
+                    GSA.Durability.Debug.LogError("GSA Durability: [OnStart] set _command: Message: " + ex.Message);
+                    GSA.Durability.Debug.LogError("GSA Durability: [OnStart] set _command: StackTrace: " + ex.StackTrace);
+                }
+            }
+
+            if (part.Modules.Contains("ModuleReactionWheel"))
+            {
+                try
+                {
+                    _reactionWheel = (ModuleReactionWheel)part.Modules["ModuleReactionWheel"];
+                }
+                catch (Exception ex)
+                {
+                    GSA.Durability.Debug.LogError("GSA Durability: [OnStart] set _reactionWheel: Message: " + ex.Message);
+                    GSA.Durability.Debug.LogError("GSA Durability: [OnStart] set _reactionWheel: StackTrace: " + ex.StackTrace);
+                }
+            }
+
+            if (part.Modules.Contains("ModuleEngines"))
+            {
+                GSA.Durability.Debug.Log("GSA Durability: [OnStart]: set _engine ");
+                try
+                {
+                    _engine = (ModuleEngines)part.Modules["ModuleEngines"];
+                }
+                catch (Exception ex)
+                {
+                    GSA.Durability.Debug.LogError("GSA Durability: [OnStart] set _engine: Message: " + ex.Message);
+                    GSA.Durability.Debug.LogError("GSA Durability: [OnStart] set _engine: StackTrace: " + ex.StackTrace);
+                }
+            }
+            if (part.Modules.Contains("ModuleScienceExperiment"))
+            {
+                GSA.Durability.Debug.Log("GSA Durability: [OnStart]: set _scienceExperiment ");
+                try
+                {
+                    _scienceExperiment = (ModuleScienceExperiment)part.Modules["ModuleScienceExperiment"];
+                }
+                catch (Exception ex)
+                {
+                    GSA.Durability.Debug.LogError("GSA Durability: [OnStart] set _scienceExperiment: Message: " + ex.Message);
+                    GSA.Durability.Debug.LogError("GSA Durability: [OnStart] set _scienceExperiment: StackTrace: " + ex.StackTrace);
+                }
+            }
+            checkStatus();
+            setEventLabel();
         }
 
         public override void OnUpdate()
@@ -393,7 +423,6 @@ namespace GSA.Durability
                 catch (Exception ex)
                 {
                     GSA.Durability.Debug.LogError("GSA Durability: [OnUpdate] Recalculate: Message: " + ex.Message);
-                    GSA.Durability.Debug.LogError("GSA Durability: [OnUpdate] Recalculate: Source: " + ex.Source);
                     GSA.Durability.Debug.LogError("GSA Durability: [OnUpdate] Recalculate: StackTrace: " + ex.StackTrace);
                 }
             }
@@ -504,8 +533,6 @@ namespace GSA.Durability
                 newCost = (double)_initCost / Math.Pow((double)_initCost, (.5d - quality));
             }
             newCost -= (double)_initCost;
-            //GSA.Durability.Debug.Log("GSA Durability: [calculateCost]: newCost: " + newCost.ToString());
-            //GSA.Durability.Debug.Log("GSA Durability: [calculateCost]: _initCost: " + _initCost.ToString());
             return (float)newCost;
         }
 
@@ -592,7 +619,6 @@ namespace GSA.Durability
             catch (Exception ex)
             {
                 GSA.Durability.Debug.LogError("GSA Durability: [checkStatus]: Message: " + ex.Message);
-                GSA.Durability.Debug.LogError("GSA Durability: [checkStatus]: Source :" + ex.Source);
                 GSA.Durability.Debug.LogError("GSA Durability: [checkStatus]: StackTrace: " + ex.StackTrace);
             }
         }
@@ -636,9 +662,7 @@ namespace GSA.Durability
             catch (Exception ex)
             {
                 GSA.Durability.Debug.LogError("GSA Durability: [setEventLabel]: Message: " + ex.Message);
-                GSA.Durability.Debug.LogError("GSA Durability: [setEventLabel]: Source: " + ex.Source);
                 GSA.Durability.Debug.LogError("GSA Durability: [setEventLabel]: StackTrace: " + ex.StackTrace);
-                GSA.Durability.Debug.LogError(ex.Data);
             }
         }
 
@@ -899,7 +923,7 @@ namespace GSA.Durability
                     if (!_engine.flameout && !_engine.engineShutdown)
                     {
                         //EngineMutli = engineWear * (_engine.requestedThrust / _engine.maxThrust + 1);
-                        EngineMutli = Math.Pow(engineWear, (_engine.requestedThrust / _engine.maxThrust)*100);
+                        EngineMutli = Math.Pow(engineWear, (_engine.requestedThrust / _engine.maxThrust) * 100);
                         EngineMutli = (EngineMutli > 1) ? EngineMutli : 1;
                         additionalReduce += (_currentWear * EngineMutli) - _currentWear;
                     }
