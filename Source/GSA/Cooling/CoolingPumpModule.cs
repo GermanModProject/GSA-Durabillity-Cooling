@@ -15,9 +15,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace GSA.Cooling
@@ -84,34 +81,36 @@ namespace GSA.Cooling
             {
                 try
                 {
-                    TemperatureManager.Instance.AddCoolingPumpPart(this);
+                    TemperatureManager.Instance.AddCoolingPumpModule(this);
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError("GSA CoolingPumpModule: [OnStart] AddCoolingPumpPart: Message: " + ex.Message);
-                    Debug.LogError("GSA CoolingPumpModule: [OnStart] AddCoolingPumpPart: Source: " + ex.Source);
-                    Debug.LogError("GSA CoolingPumpModule: [OnStart] AddCoolingPumpPart: StackTrace: " + ex.StackTrace);
+                    GSA.Debug.LogError("[GSA Cooling] CoolingPumpModule->OnStart: AddCoolingPumpModule: Message: " + ex.Message);
+                    GSA.Debug.LogError("[GSA Cooling] CoolingPumpModule->OnStart: AddCoolingPumpModule: StackTrace: " + ex.StackTrace);
                 }
             }
         }
 
+        public override void OnUpdate()
+        {
+            coolantTemperature = TemperatureManager.Instance.CoolantTemp;
+        }
 
         public override void OnInactive()
         {
-            TemperatureManager.Instance.RemoveCoolingPumpPart(this);
+            TemperatureManager.Instance.RemoveCoolingPumpModule(this);
         }
 
         public override void OnActive()
         {
             try
             {
-                TemperatureManager.Instance.AddCoolingPumpPart(this);
+                TemperatureManager.Instance.AddCoolingPumpModule(this);
             }
             catch (Exception ex)
             {
-                Debug.LogError("GSA CoolingPumpModule: [OnActive] AddCoolingPumpPart: Message: " + ex.Message);
-                Debug.LogError("GSA CoolingPumpModule: [OnActive] AddCoolingPumpPart: Source: " + ex.Source);
-                Debug.LogError("GSA CoolingPumpModule: [OnActive] AddCoolingPumpPart: StackTrace: " + ex.StackTrace);
+                GSA.Debug.LogError("[GSA Cooling] CoolingPumpModule->OnActive: AddCoolingPumpPart: Message: " + ex.Message);
+                GSA.Debug.LogError("[GSA Cooling] CoolingPumpModule->OnActive: AddCoolingPumpPart: StackTrace: " + ex.StackTrace);
             }
         }
 

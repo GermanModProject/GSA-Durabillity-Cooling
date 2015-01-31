@@ -23,6 +23,8 @@ namespace GSA.Durability
     public class VesselOverview : MonoBehaviour
     {
         private bool _hideWindows = true;
+        private bool _isActiveWindows = false;
+        private bool _isHoverButton = false;
         private bool _runOnce = true;
         private bool _guiRunning = false;
         private Vessel _vessel;
@@ -32,7 +34,7 @@ namespace GSA.Durability
         private GUIStyle _labelTxtRight;
         private GUIStyle _window;
 
-        private static ApplicationLauncherButton _launcherButton = null;
+        private ApplicationLauncherButton _launcherButton = null;
 
         private Texture2D _durabilityButtonTexture = null;
         private Texture2D _durabilityButtonIdle = new Texture2D(38, 38, TextureFormat.ARGB32, false);
@@ -40,7 +42,9 @@ namespace GSA.Durability
         private Texture2D _durabilityButtonIWarn = new Texture2D(38, 38, TextureFormat.ARGB32, false);
         private Texture2D _durabilityButtonError = new Texture2D(38, 38, TextureFormat.ARGB32, false);
 
-        protected Rect _mainWindowPos = new Rect(Screen.width - 400f, 40f, 400f, 500f);
+        private Vector2 _partListScroll = Vector2.zero;
+
+        protected Rect _mainWindowPos = new Rect(Screen.width - 400f, 38f, 400f, 300f);
 
         private void OnGUIApplicationLauncherReady()
         {
@@ -49,7 +53,7 @@ namespace GSA.Durability
             {
                 GSA.Durability.Debug.Log("[GSA Durablity] VesselOverview->OnGUIApplicationLauncherReady: set _launcherButton");
                 _launcherButton = ApplicationLauncher.Instance.AddModApplication(UIToggle, UIToggle,
-                                                                            null, null,
+                                                                            UIHover, UIHoverOut,
                                                                             null, null,
                                                                             ApplicationLauncher.AppScenes.FLIGHT,
                                                                             _durabilityButtonIdle);
@@ -63,16 +67,18 @@ namespace GSA.Durability
 
         public void UIToggle()
         {
-            if (!_hideWindows)
-            {
-                _hideWindows = true;
-                GSA.Durability.Debug.Log("[GSA Durablity] VesselOverview->UIToggle: hide Window");
-            }
-            else
-            {
+            _hideWindows = !_hideWindows;
+            _isActiveWindows = !_isActiveWindows;
+        }
+        public void UIHover()
+        {
+            if (_hideWindows)
                 _hideWindows = false;
-                GSA.Durability.Debug.Log("[GSA Durablity] VesselOverview->UIToggle: show Window");
-            }
+            _isHoverButton = true;
+        }
+        public void UIHoverOut()
+        {
+            _isHoverButton = false;
         }
 
         public void launcherButtonRemove()
@@ -80,6 +86,11 @@ namespace GSA.Durability
             if (_launcherButton != null)
             {
                 ApplicationLauncher.Instance.RemoveModApplication(_launcherButton);
+                _launcherButton = null;
+                GameEvents.onGUIApplicationLauncherReady.Remove(OnGUIApplicationLauncherReady);
+                GameEvents.onGUIApplicationLauncherDestroyed.Remove(OnGUIApplicationLauncherDestroyed);
+                GameEvents.onGUIApplicationLauncherUnreadifying.Remove(OnGUIAppLauncherUnreadifying);
+                GameEvents.onGameSceneLoadRequested.Remove(OnSceneChangeRequest);
                 GSA.Durability.Debug.Log("[GSA Durablity] VesselOverview->launcherButtonRemove: RemoveModApplication");
             }
             else
@@ -88,6 +99,10 @@ namespace GSA.Durability
             }
         }
         public void OnSceneChangeRequest(GameScenes _scene)
+        {
+            launcherButtonRemove();
+        }
+        private void OnGUIAppLauncherUnreadifying(GameScenes _scene)
         {
             launcherButtonRemove();
         }
@@ -138,6 +153,7 @@ namespace GSA.Durability
 
             GameEvents.onGUIApplicationLauncherReady.Add(OnGUIApplicationLauncherReady);
             GameEvents.onGUIApplicationLauncherDestroyed.Add(OnGUIApplicationLauncherDestroyed);
+            GameEvents.onGUIApplicationLauncherUnreadifying.Add(OnGUIAppLauncherUnreadifying);
             GameEvents.onGameSceneLoadRequested.Add(OnSceneChangeRequest);
         }
 
@@ -156,8 +172,11 @@ namespace GSA.Durability
 
         private void WindowGUI(int windowID)
         {
+            GUILayout.BeginHorizontal();
+            _partListScroll = GUILayout.BeginScrollView(_partListScroll, false, false, GUILayout.Width(385f));
             getDurabiltys();
-            //GUI.DragWindow(new Rect(0, 0, 10000, 20));
+            GUILayout.EndScrollView();
+            GUILayout.EndHorizontal();
         }
 
         protected void drawGUI()
@@ -165,7 +184,11 @@ namespace GSA.Durability
             if (!_hideWindows && _vessel != null)
             {
                 GUI.skin = HighLogic.Skin;
-                _mainWindowPos = GUILayout.Window(1, _mainWindowPos, WindowGUI, "Durability (BETA)", _window);
+                _mainWindowPos = GUILayout.Window(1, _mainWindowPos, WindowGUI, "Durability", _window);
+                if (!_isHoverButton && !_isActiveWindows && !_mainWindowPos.Contains(Event.current.mousePosition))
+                {
+                    _hideWindows = true;
+                }
             }
         }
 

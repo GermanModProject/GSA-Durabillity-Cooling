@@ -103,8 +103,8 @@ namespace GSA.Durability
         /// <summary>
         /// Cooling Property
         /// </summary>
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Cooling Property", guiUnits = "", guiFormat = "F0")]
-        public float coolingProperty = -10f;
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Cooling Priority", guiUnits = "", guiFormat = "F0")]
+        public float coolingPriority = -10f;
 
         /// <summary>
         /// Quality from Part 0.0f - 1.0f; Default: 0.5f 
@@ -194,8 +194,8 @@ namespace GSA.Durability
         /// <summary>
         /// Part will cooling
         /// </summary>
-        [KSPField(isPersistant = true)]
-        public bool cooling;
+        [KSPField(isPersistant = true, guiActive = true, guiName = "Cooling status ")]
+        public bool cooling = true;
 
         #endregion //KSPFields
 
@@ -269,11 +269,18 @@ namespace GSA.Durability
             {
                 if (vpart.Modules.Contains("CoolingPumpModule"))
                 {
+                    GSA.Durability.Debug.Log("[GSA Durability] DurabilityModule->ToggleCooling: found CoolingPumpModule");
                     PartModule coolingPumpModule = vpart.Modules["CoolingPumpModule"];
                     coolingPumpModule.GetType().GetMethod("ReInitCooling").Invoke(coolingPumpModule, null);
                     break;
                 }
             }
+        }
+
+        [KSPEvent(guiName = "Add Temp (Debug)", guiActive = true)]
+        public void AddTemp()
+        {
+            part.temperature += 10f; 
         }
 
         #endregion //KSPEvent

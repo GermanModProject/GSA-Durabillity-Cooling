@@ -15,9 +15,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using UnityEngine;
 
 namespace GSA.Cooling
 {
@@ -58,7 +56,15 @@ namespace GSA.Cooling
         {
             if (state != StartState.Editor)
             {
-                TemperatureManager.Instance.AddCoolingRadiatorModule(this);
+                try
+                {
+                    TemperatureManager.Instance.AddCoolingRadiatorModule(this);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError("[GSA Cooling] CoolingRadiatorModule->OnStart: AddCoolingRadiatorModule: Message: " + ex.Message);
+                    Debug.LogError("[GSA Cooling] CoolingRadiatorModule->OnStart: AddCoolingRadiatorModule: StackTrace: " + ex.StackTrace);
+                }
             }
         }
 
