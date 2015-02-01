@@ -19,13 +19,22 @@ namespace GSA.Cooling
         public List<CoolingRadiatorModule> CoolingRadiatorModuleList { get; private set; }
 
         public List<Part> CoolingParts { get; private set; }
-        public float CoolantTemp { get; private set; }
+        public float CoolantTemp { get; set; }
+        public float CoolantAmount { get; private set; }
+        public float CoolantFlowRate { get; private set; }
 
         private SortedDictionary<float, Part> _priorityList;
         private Vessel _vessel = null;
         private bool _look = false;
         private int _maxCoolingParts = 0;
-        
+
+        public SortedDictionary<float, Part> PriorityList
+        {
+            get
+            {
+                return _priorityList;
+            }
+        }
 
 
         private TemperatureManager()
@@ -34,8 +43,9 @@ namespace GSA.Cooling
             _priorityList = new SortedDictionary<float, Part>();
         }
 
-        public void Update()
+        public void UpdateFlowRate()
         {
+            CoolantFlowRate = Simulator.CalculateCoolantFlowRate();
         }
 
         public void SetVessel(Vessel vessel)
@@ -53,6 +63,7 @@ namespace GSA.Cooling
             }
             GSA.Debug.Log("[GSA Cooling] TemperatureManager->AddCoolingPumpModule " + coolingPumpModule.part.name);
             CoolingPumpModuleList.Add(coolingPumpModule);
+            CoolantAmount += 10;
         }
 
         public void RemoveCoolingPumpModule(CoolingPumpModule coolingPumpModule)
@@ -61,6 +72,7 @@ namespace GSA.Cooling
             {
                 GSA.Debug.Log("[GSA Cooling] TemperatureManager->RemoveCoolingPumpModule: " + coolingPumpModule.part.name);
                 CoolingPumpModuleList.Remove(coolingPumpModule);
+                CoolantAmount -= 10;
             }
         }
 
@@ -72,6 +84,7 @@ namespace GSA.Cooling
             }
             GSA.Debug.Log("[GSA Cooling] TemperatureManager->AddCoolingRadiatorModule " + coolingRadiatorModule.part.name);
             CoolingRadiatorModuleList.Add(coolingRadiatorModule);
+            CoolantAmount += coolingRadiatorModule.coolantAmount;
         }
 
         public void RemoveCoolingRadiatorModule(CoolingRadiatorModule coolingRadiatorModule)
@@ -80,6 +93,7 @@ namespace GSA.Cooling
             {
                 GSA.Debug.Log("[GSA Cooling] TemperatureManager->RemoveCoolingRadiatorModule: " + coolingRadiatorModule.part.name);
                 CoolingRadiatorModuleList.Remove(coolingRadiatorModule);
+                CoolantAmount -= coolingRadiatorModule.coolantAmount;
             }
         }
 
@@ -151,6 +165,10 @@ namespace GSA.Cooling
             foreach (Part part in CoolingParts)
             {
                 float priority = GetPartCoolingPrority(part);
+                if (priority == 0)
+                {
+                    continue;
+                }
                 while (true)
                 {
                     if (_priorityList.ContainsKey(priority))
@@ -162,15 +180,21 @@ namespace GSA.Cooling
                         break;
                     }
                 }
-                BaseField priorityField = null;
-                foreach (BaseField field in part.Fields)
+                if (part.Modules.Contains("DurabilityModule"))
                 {
-                    if (field.FieldInfo.Name == "coolingPriority")
+                    PartModule durabilityModule = part.Modules["DurabilityModule"];
+                    BaseField priorityField = null;
+                    foreach (BaseField field in durabilityModule.Fields)
                     {
-                        priorityField = field;
-                        priorityField.SetValue(priority, part);
-                        break;
+                        if (field.FieldInfo.Name == "coolingPriority")
+                        {
+                            priorityField = field;
+                            GSA.Debug.Log("[GSA Cooling] TemperatureManager->UpdatePriority set priority(" + part.name + "): " + priority);
+                            break;
+                        }
                     }
+                    priorityField.SetValue(priority, durabilityModule);
+                    GSA.Debug.Log("[GSA Cooling] TemperatureManager->UpdatePriority HAS DurabilityModule(" + part.name + "): " + priority);
                 }
                 try
                 {
@@ -188,6 +212,29 @@ namespace GSA.Cooling
                     _look = false;
                 }
             }
+        }
+
+
+        public float GetPartCoolingPrority(Part part, bool fromCache)
+        {
+            if (!fromCache)
+            {
+                return GetPartCoolingPrority(part);
+            }
+            else
+            {
+                if (_priorityList.ContainsValue(part))
+                {
+                    foreach (KeyValuePair<float, Part> pinfo in _priorityList)
+                    {
+                        if (pinfo.Value == part)
+                        {
+                            return pinfo.Key;
+                        }
+                    }
+                }
+            }
+            return 0;
         }
 
         /// <summary>
@@ -212,17 +259,24 @@ namespace GSA.Cooling
                 FloatCurve idealT = (FloatCurve)idealTemp.GetValue(durabilityModule);
                 float prority = 0;
                 prority = idealT.Evaluate(part.temperature);
-
-                BaseField coolingPriority = null;
-                foreach (BaseField f in durabilityModule.Fields)
+                bool isLow = true;
+                for (int i = -272; i < 4000; i++)
                 {
-                    if (f.FieldInfo.Name == "coolingPriority")
+                    if (idealT.Evaluate(i) == 0)
                     {
-                        coolingPriority = f;
-                        coolingPriority.SetValue(prority, durabilityModule);
+                        isLow = false;
+                        break;
+                    }
+                    if (i >= part.temperature)
+                    {
                         break;
                     }
                 }
+                if(isLow && prority > 0)
+                {
+                    prority = -prority;
+                }
+
                 return prority;
             }
             return 0;
@@ -232,7 +286,7 @@ namespace GSA.Cooling
         /// Get current maximal count of part can cooling
         /// </summary>
         /// <returns></returns>
-        public int updateMaxCoolingPartCount()
+        public int UpdateMaxCoolingPartCount()
         {
             int maxCoolingPartCount = 0;
             foreach (CoolingPumpModule coolingPumpModule in CoolingPumpModuleList)
@@ -242,26 +296,20 @@ namespace GSA.Cooling
                     maxCoolingPartCount += coolingPumpModule.maxCoolingParts;
                 }
             }
-            _maxCoolingParts = maxCoolingPartCount; 
+            _maxCoolingParts = maxCoolingPartCount;
             return maxCoolingPartCount;
         }
 
         /// <summary>
         /// Perform the cooling
         /// </summary>
-        private void cooling()
+        public void Cooling()
         {
             int loop = 0;
+            CoolantTemp = Simulator.CalculateCoolantTemp();
             foreach (KeyValuePair<float, Part> coolingPart in _priorityList.Reverse())
-            {               
-                if(coolingPart.Key > 0)
-                {
-                    
-                }
-                else
-                {
-                    continue;
-                }
+            {
+                Simulator.CalculatePartCooling(coolingPart.Value);
                 loop++;
                 if (loop >= _maxCoolingParts)
                 {

@@ -1,6 +1,6 @@
 ﻿///////////////////////////////////////////////////////////////////////////////
 //
-//    Durability a plugin for Kerbal Space Program from SQUAD
+//    Cooling a plugin for Kerbal Space Program from SQUAD
 //    (https://www.kerbalspaceprogram.com/)
 //    and part of GSA Mod
 //    (http://www.kerbalspaceprogram.de)
@@ -44,11 +44,11 @@ namespace GSA.Cooling
         private Texture2D _coolingButtonIWarn = new Texture2D(38, 38, TextureFormat.ARGB32, false);
         private Texture2D _coolingButtonError = new Texture2D(38, 38, TextureFormat.ARGB32, false);
 
-        private Texture2D _listActive = new Texture2D(16, 16, TextureFormat.ARGB32, false);
-        private Texture2D _listInactive = new Texture2D(16, 16, TextureFormat.ARGB32, false);
-        private Texture2D _listOk = new Texture2D(16, 16, TextureFormat.ARGB32, false);
-        private Texture2D _listWarn = new Texture2D(16, 16, TextureFormat.ARGB32, false);
-        private Texture2D _listCritical = new Texture2D(16, 16, TextureFormat.ARGB32, false);
+        private Texture2D _listIconActive = new Texture2D(16, 16, TextureFormat.ARGB32, false);
+        private Texture2D _listIconInactive = new Texture2D(16, 16, TextureFormat.ARGB32, false);
+        private Texture2D _listIconOk = new Texture2D(16, 16, TextureFormat.ARGB32, false);
+        private Texture2D _listIconWarn = new Texture2D(16, 16, TextureFormat.ARGB32, false);
+        private Texture2D _listIconCritical = new Texture2D(16, 16, TextureFormat.ARGB32, false);
 
         protected Rect _mainWindowPos = new Rect(Screen.width - 460f, 38f, 460f, 300f);
 
@@ -164,23 +164,23 @@ namespace GSA.Cooling
 
             if (GameDatabase.Instance.ExistsTexture("GermanSpaceAlliance/Icons/ListActive"))
             {
-                _listActive = GameDatabase.Instance.GetTexture("GermanSpaceAlliance/Icons/ListActive", false);
+                _listIconActive = GameDatabase.Instance.GetTexture("GermanSpaceAlliance/Icons/ListActive", false);
             }
             if (GameDatabase.Instance.ExistsTexture("GermanSpaceAlliance/Icons/ListInactive"))
             {
-                _listInactive = GameDatabase.Instance.GetTexture("GermanSpaceAlliance/Icons/ListInactive", false);
+                _listIconInactive = GameDatabase.Instance.GetTexture("GermanSpaceAlliance/Icons/ListInactive", false);
             }
-            if (GameDatabase.Instance.ExistsTexture("GermanSpaceAlliance/Icons/ListOk"))
+            if (GameDatabase.Instance.ExistsTexture("GermanSpaceAlliance/Icons/ListStatusOk"))
             {
-                _listOk = GameDatabase.Instance.GetTexture("GermanSpaceAlliance/Icons/ListOk", false);
+                _listIconOk = GameDatabase.Instance.GetTexture("GermanSpaceAlliance/Icons/ListStatusOk", false);
             }
-            if (GameDatabase.Instance.ExistsTexture("GermanSpaceAlliance/Icons/ListWarn"))
+            if (GameDatabase.Instance.ExistsTexture("GermanSpaceAlliance/Icons/ListStatusWarn"))
             {
-                _listWarn = GameDatabase.Instance.GetTexture("GermanSpaceAlliance/Icons/ListWarn", false);
+                _listIconWarn = GameDatabase.Instance.GetTexture("GermanSpaceAlliance/Icons/ListStatusWarn", false);
             }
-            if (GameDatabase.Instance.ExistsTexture("GermanSpaceAlliance/Icons/ListCritical"))
+            if (GameDatabase.Instance.ExistsTexture("GermanSpaceAlliance/Icons/ListStatusCritical"))
             {
-                _listCritical = GameDatabase.Instance.GetTexture("GermanSpaceAlliance/Icons/ListCritical", false);
+                _listIconCritical = GameDatabase.Instance.GetTexture("GermanSpaceAlliance/Icons/ListStatusCritical", false);
             }
 
             GameEvents.onGUIApplicationLauncherReady.Add(OnGUIApplicationLauncherReady);
@@ -284,7 +284,7 @@ namespace GSA.Cooling
                 content.tooltip = "Part";
 
                 GUILayout.BeginHorizontal();
-               // GUILayout.Space(44f);  
+                //GUILayout.Space(44f); 
  
                 //Cooling Toggle
                 if (part.Modules.Contains("DurabilityModule"))
@@ -307,10 +307,32 @@ namespace GSA.Cooling
                         coolingField.SetValue(newBoCool, durabilityModule);
                         TemperatureManager.Instance.FindPartsToBoCooled();
                     }
-                }        
+                }
+                GUILayout.Space(23f); 
 
                 //Label
                 GUILayout.Label(content, _labelTxtLinkLeft, GUILayout.ExpandWidth(true));
+
+                //Status Icon
+                iconRect = GUILayoutUtility.GetLastRect();
+                iconRect.size = new Vector2(16, 16);
+                iconRect.position = new Vector2(iconRect.position.x - 18f, iconRect.position.y);
+
+                float priority = TemperatureManager.Instance.GetPartCoolingPrority(part, true);
+                Texture2D icon = null;
+                if(priority == 0) {
+                    icon = _listIconOk;
+                }
+                else if (priority > -100 || priority < 100)
+                {
+                    icon = _listIconWarn;
+                }
+                else if (priority <= -100 || priority >= 100)
+                {
+                    icon = _listIconCritical;
+                }
+                GUI.DrawTexture(iconRect, icon);
+
                 if (GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition))
                 {
                     part.SetHighlightType(Part.HighlightType.OnMouseOver);

@@ -29,25 +29,25 @@ namespace GSA.Cooling
         /// <summary>
         /// cooling factor (1L per Minute)
         /// </summary>
-        [KSPField(isPersistant = true, guiActive = false)]
+        [KSPField(isPersistant = false, guiActive = false)]
         public float coolingFactor = .5f;
 
         /// <summary>
         /// Coolant Amount
         /// </summary>
-        [KSPField(isPersistant = true, guiActive = false)]
+        [KSPField(isPersistant = false, guiActive = false)]
         public float coolantAmount = 50f;
 
         /// <summary>
         /// Cooleant in Temperature
         /// </summary>
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Coolant In", guiUnits = "° C", guiFormat = "F0")]
+        [KSPField(isPersistant = true, guiActive = true, guiName = "Coolant In", guiUnits = "° C", guiFormat = "0.000")]
         public float coolantInTemperature = 0;
 
         /// <summary>
         /// Cooleant out Temperature
         /// </summary>
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Coolant Out", guiUnits = "° C", guiFormat = "F0")]
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Coolant Out", guiUnits = "° C", guiFormat = "0.000")]
         public float coolantOutTemperature = 0;
 
         #endregion //KSPFields

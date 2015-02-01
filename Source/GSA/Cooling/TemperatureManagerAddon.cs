@@ -55,8 +55,11 @@ namespace GSA.Cooling
                 //GSA.Debug.Log("[GSA Cooling] TemperatureManagerAddon->Update updateFrequency");
                 _lastUpdate = 0;
                 UpdatePriority();
-                TemperatureManager.Instance.updateMaxCoolingPartCount();
+                TemperatureManager.Instance.UpdateMaxCoolingPartCount();
+                TemperatureManager.Instance.UpdateFlowRate();
             }
+
+            TemperatureManager.Instance.Cooling();
         }
 
         public void UpdatePriority()
