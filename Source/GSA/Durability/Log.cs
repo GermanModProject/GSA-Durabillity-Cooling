@@ -6,7 +6,7 @@
 //    (http://www.kerbalspaceprogram.de)
 //
 //    Author: runner78
-//    Copyright (c) 2014 runner78
+//    Copyright (c) 2014-2015 runner78
 //
 //    This program, coding and graphics are provided under the following Creative Commons license.
 //    Attribution-NonCommercial 3.0 Unported
