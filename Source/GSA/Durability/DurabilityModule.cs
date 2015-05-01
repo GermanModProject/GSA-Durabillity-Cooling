@@ -286,7 +286,7 @@ namespace GSA.Durability
         [KSPEvent(guiName = "Add Temp (Debug)", guiActive = true)]
         public void AddTemp()
         {
-            part.temperature += 10f; 
+            part.temperature += 10f;
         }
 
         #endregion //KSPEvent
@@ -343,9 +343,11 @@ namespace GSA.Durability
                 this.quality = (this.part.Resources["Quality"].amount / (this.part.Resources["Quality"].maxAmount / 100)) / 100;
             }
 
-            if (this.basicWear.findCurveMinMaxInterations == 0)
+            float basicWearMin;
+            float basicWearMax;
+            this.basicWear.FindMinMaxValue(out basicWearMin, out basicWearMax);
+            if (basicWearMin == 0 && basicWearMax == 0)
             {
-                this.basicWear = new FloatCurve();
                 this.basicWear.Add(0.1f, 0.69f);
                 this.basicWear.Add(0.5f, 0.000181f);
                 this.basicWear.Add(1f, 0.00001f);
@@ -560,24 +562,32 @@ namespace GSA.Durability
         {
             this.displayDurability = GetDurabilityPercent();
             this.displayTemperature = this.part.temperature.ToString("0.00");
-            try
+            if (this.part.Resources.Contains("Durability"))
             {
-                if (this.part.Resources.Contains("Durability"))
+                if (this.part.Resources["Durability"].amount <= 0 && canExplode)
                 {
-                    if (this.part.Resources["Durability"].amount <= 0 && canExplode)
+                    GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: explode[canExplode] " + part.name);
+                    this.part.explode();
+                }
+                else
+                {
+                    if (this.part.Resources["Durability"].amount <= minDurability && !this.part.frozen)
                     {
-                        this.part.explode();
-                        GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: explode[canExplode] " + part.name);
-                    }
-                    else
-                    {
-                        if (this.part.Resources["Durability"].amount <= minDurability && !this.part.frozen)
+                        try
                         {
                             if (this.reactionWheel != null)
                             {
+                                GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: explode[canExplode] " + part.name);
                                 this.reactionWheel.wheelState = ModuleReactionWheel.WheelState.Broken;
                             }
+                        }
+                        catch (Exception ex)
+                        {
+                            GSA.Durability.Debug.LogError("GSA Durability: [checkStatus]: ReactionWheel: " + ex.Message);
+                        }
 
+                        try
+                        {
                             if (this.engine != null)
                             {
                                 GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: _engine is not Null:");
@@ -587,58 +597,57 @@ namespace GSA.Durability
                                     GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: engineShutdown = True");
                                 }
                             }
-                            GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: _engine:" + this.engine.ToString());
-                            GSA.Durability.Debug.Log(this.engine);
-                            foreach (PartModule dModules in part.Modules)
-                            {
-                                if (dModules.moduleName != "DurabilityModule")
-                                {
-                                    dModules.isEnabled = false;
-                                    GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: isEnabled = False:  " + dModules.moduleName);
-                                }
-                            }
-                            this.part.freeze();
-                            GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: freeze Part " + this.part.name);
                         }
-                        else if (this.part.Resources["Durability"].amount > minDurability && this.part.frozen)
+                        catch (Exception ex)
                         {
-                            this.part.unfreeze();
-                            if (reactionWheel != null)
-                            {
-                                this.reactionWheel.wheelState = ModuleReactionWheel.WheelState.Active;
-                            }
-                            foreach (PartModule aModules in this.part.Modules)
-                            {
-                                if (aModules.moduleName != "DurabilityModule")
-                                {
-                                    aModules.isEnabled = true;
-                                    GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: isEnabled = True:  " + aModules.moduleName);
-                                }
-                            }
-                            GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: unfreeze Part " + this.part.name);
+                            GSA.Durability.Debug.LogError("GSA Durability: [checkStatus]: Engine: " + ex.Message);
                         }
-                        if (part.Resources["Durability"].amount <= 0)
+
+                        foreach (PartModule dModules in part.Modules)
                         {
-                            if (this.vessel.staticPressure >= this.maxPressure)
+                            if (dModules.moduleName != "DurabilityModule")
                             {
-                                this.part.explode();
-                                GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: explode[Pressure] " + this.part.name);
+                                dModules.isEnabled = false;
+                                GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: isEnabled = False:  " + dModules.moduleName);
                             }
-                            if (this.engine != null && this.quality == 0.01d)
+                        }
+                        this.part.freeze();
+                        GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: freeze Part " + this.part.name);
+                    }
+                    else if (this.part.Resources["Durability"].amount > minDurability && this.part.frozen)
+                    {
+                        this.part.unfreeze();
+                        if (reactionWheel != null)
+                        {
+                            this.reactionWheel.wheelState = ModuleReactionWheel.WheelState.Active;
+                        }
+                        foreach (PartModule aModules in this.part.Modules)
+                        {
+                            if (aModules.moduleName != "DurabilityModule")
                             {
-                                this.part.explode();
-                                GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: explode[engine] " + this.part.name);
+                                aModules.isEnabled = true;
+                                GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: isEnabled = True:  " + aModules.moduleName);
                             }
+                        }
+                        GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: unfreeze Part " + this.part.name);
+                    }
+                    if (part.Resources["Durability"].amount <= 0)
+                    {
+                        if (this.vessel.staticPressurekPa >= this.maxPressure)
+                        {
+                            this.part.explode();
+                            GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: explode[Pressure] " + this.part.name);
+                        }
+                        if (this.engine != null && this.quality == 0.01d)
+                        {
+                            this.part.explode();
+                            GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: explode[engine] " + this.part.name);
                         }
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                GSA.Durability.Debug.LogError("GSA Durability: [checkStatus]: Message: " + ex.Message);
-                GSA.Durability.Debug.LogError("GSA Durability: [checkStatus]: StackTrace: " + ex.StackTrace);
-            }
         }
+
 
         private void setEventLabel()
         {
@@ -854,7 +863,7 @@ namespace GSA.Durability
             try
             {
                 double tempMutli = 0;
-                tempMutli = this.idealTemp.Evaluate(this.part.temperature);
+                tempMutli = this.idealTemp.Evaluate(System.Convert.ToSingle(this.part.temperature));
                 tempMutli = (tempMutli > 1) ? tempMutli : 1;
                 additionalReduce += (this.currentWear * tempMutli) - this.currentWear;
                 this.displayTempM = tempMutli.ToString("0.0000");
@@ -910,7 +919,7 @@ namespace GSA.Durability
             {
                 double pressureMulti = 0;
                 float pressure = 1f;
-                pressure = Convert.ToSingle(this.vessel.staticPressure);
+                pressure = Convert.ToSingle(this.vessel.staticPressurekPa);
                 pressureMulti = this.idealPressure.Evaluate(pressure);
                 pressureMulti = (pressureMulti > 1) ? pressureMulti : 1;
                 additionalReduce += (this.currentWear * pressureMulti) - this.currentWear;
@@ -940,7 +949,7 @@ namespace GSA.Durability
                     if (!this.engine.flameout && !this.engine.engineShutdown)
                     {
                         //EngineMutli = engineWear * (_engine.requestedThrust / _engine.maxThrust + 1);
-                        engineMutli = Math.Pow(this.engineWear, (this.engine.requestedThrust / this.engine.maxThrust) * 100);
+                        engineMutli = Math.Pow(this.engineWear, (this.engine.GetCurrentThrust() / this.engine.maxThrust) * 100);
                         engineMutli = (engineMutli > 1) ? engineMutli : 1;
                         additionalReduce += (this.currentWear * engineMutli) - this.currentWear;
                     }
@@ -1019,7 +1028,7 @@ namespace GSA.Durability
                 {
                     try
                     {
-                        double atmoAbsob = (this.vessel.staticPressure > 1.05 ? 0 : 1.05 - this.vessel.staticPressure);
+                        double atmoAbsob = (this.vessel.staticPressurekPa > 1.05 ? 0 : 1.05 - this.vessel.staticPressurekPa);
                         radiationMutli = sunDis * 1.4995217994990961392430031278165e-9;
                         radiationMutli *= atmoAbsob;
                         //displaySun += ";" + radiationMutli.ToString("0.0000"); 
