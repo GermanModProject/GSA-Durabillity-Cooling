@@ -39,13 +39,11 @@ namespace GSA.Durability
 
         public static void LogError(object message)
         {
-            if (debug)
-                UnityEngine.Debug.LogError(message);
+            UnityEngine.Debug.LogError(message);
         }
         public static void LogError(object message, UnityEngine.Object context)
         {
-            if (debug)
-                UnityEngine.Debug.LogError(message, context);
+            UnityEngine.Debug.LogError(message, context);
         }
 
         public static void LogWarning(object message)

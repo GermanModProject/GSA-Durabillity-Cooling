@@ -43,31 +43,31 @@ namespace GSA.Durability
         /// <summary>
         /// Display Damage
         /// </summary>
-        [KSPField(isPersistant = false, guiActive = true, guiName = "[D]Damage")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "[D]Damage")]
         public string displayDamage;
 
         /// <summary>
         /// Display Pressure
         /// </summary>
-        [KSPField(isPersistant = false, guiActive = true, guiName = "[D]Pressure")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "[D]Pressure")]
         public string displayPressure;
 
         /// <summary>
         /// Display Engine
         /// </summary>
-        [KSPField(isPersistant = false, guiActive = true, guiName = "[D]Engine")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "[D]Engine")]
         public string displayEngine;
 
         /// <summary>
         /// Display GeeForce
         /// </summary>
-        [KSPField(isPersistant = false, guiActive = true, guiName = "[D]G")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "[D]G")]
         public string displayGeeForce;
 
         /// <summary>
         /// Display TempM
         /// </summary>
-        [KSPField(isPersistant = false, guiActive = true, guiName = "[D]Temp")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "[D]Temp")]
         public string displayTempM;
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace GSA.Durability
         /// <summary>
         /// Display Experiment
         /// </summary>
-        [KSPField(isPersistant = false, guiActive = true, guiName = "[D]Expe.")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "[D]Expe.")]
         public string displayExp;
 
         /// <summary>
@@ -91,13 +91,31 @@ namespace GSA.Durability
         /// <summary>
         /// Display Temperature
         /// </summary>
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Temperature", guiUnits = "° C", guiFormat = "F0")]
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Temperature", guiUnits = "° K", guiFormat = "F")]
         public string displayTemperature;
+
+        /// <summary>
+        /// Display Inner Temperature in c°
+        /// </summary>
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Inner Temperature", guiUnits = "° C", guiFormat = "F")]
+        public string displayInnerTemperatureCelcius;
+
+        /// <summary>
+        /// Display Inner Temperature
+        /// </summary>
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Inner Temperature", guiUnits = "° K", guiFormat = "F")]
+        public string displayInnerTemperature;
+
+        /// <summary>
+        /// Display Temperature in c°
+        /// </summary>
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Temperature", guiUnits = "° C", guiFormat = "F")]
+        public string displayTemperatureCelcius;
 
         /// <summary>
         /// GForece Display Debug
         /// </summary>
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Expiry ", guiUnits = "", guiFormat = "F0")]
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Expiry", guiUnits = "", guiFormat = "F0")]
         public string displayTime;
 
         /// <summary>
@@ -447,7 +465,7 @@ namespace GSA.Durability
                 CheckStatus();
                 setEventLabel();
             }
-            this.countUpdates++;
+            this.countUpdates++;            
         }
 
         public void FixedUpdate()
@@ -470,7 +488,6 @@ namespace GSA.Durability
             base.OnLoad(node);
             try
             {
-                GSA.Durability.Debug.Log(node);
                 if (node.HasValue("lastUpdateTime"))
                 {
                     double.TryParse(node.GetValue("lastUpdateTime"), out this.lastUpdateTime);
@@ -562,11 +579,13 @@ namespace GSA.Durability
         {
             this.displayDurability = GetDurabilityPercent();
             this.displayTemperature = this.part.temperature.ToString("0.00");
+            this.displayTemperatureCelcius = (this.part.temperature - 273.15d).ToString("0.00");
             if (this.part.Resources.Contains("Durability"))
             {
                 if (this.part.Resources["Durability"].amount <= 0 && canExplode)
                 {
                     GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: explode[canExplode] " + part.name);
+                    this.part.Die();
                     this.part.explode();
                 }
                 else
@@ -633,10 +652,10 @@ namespace GSA.Durability
                     }
                     if (part.Resources["Durability"].amount <= 0)
                     {
-                        if (this.vessel.staticPressurekPa >= this.maxPressure)
+                        if (this.part.staticPressureAtm >= this.maxPressure)
                         {
                             this.part.explode();
-                            GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: explode[Pressure] " + this.part.name);
+                            GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: explode[Pressure] " + this.part.name + "; this.part.staticPressureAtm :" + this.part.staticPressureAtm + "; this.maxPressure:" + this.maxPressure);
                         }
                         if (this.engine != null && this.quality == 0.01d)
                         {
@@ -781,7 +800,7 @@ namespace GSA.Durability
             }
             else
             {
-                GSA.Durability.Debug.Log("KspDeMod [GetDurabilityPercent]: Resource Durability not Found");
+                GSA.Durability.Debug.Log("GSA Durability: [GetDurabilityPercent]: Resource Durability not Found");
             }
             return percent * 100;
         }
@@ -919,7 +938,7 @@ namespace GSA.Durability
             {
                 double pressureMulti = 0;
                 float pressure = 1f;
-                pressure = Convert.ToSingle(this.vessel.staticPressurekPa);
+                pressure = Convert.ToSingle(this.part.staticPressureAtm);
                 pressureMulti = this.idealPressure.Evaluate(pressure);
                 pressureMulti = (pressureMulti > 1) ? pressureMulti : 1;
                 additionalReduce += (this.currentWear * pressureMulti) - this.currentWear;
@@ -1028,7 +1047,7 @@ namespace GSA.Durability
                 {
                     try
                     {
-                        double atmoAbsob = (this.vessel.staticPressurekPa > 1.05 ? 0 : 1.05 - this.vessel.staticPressurekPa);
+                        double atmoAbsob = (this.part.staticPressureAtm > 1.05 ? 0 : 1.05 - this.part.staticPressureAtm);
                         radiationMutli = sunDis * 1.4995217994990961392430031278165e-9;
                         radiationMutli *= atmoAbsob;
                         //displaySun += ";" + radiationMutli.ToString("0.0000"); 

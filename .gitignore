@@ -7,6 +7,7 @@
 
 # User-specific files
 *.suo
+*.v12.suo
 *.user
 *.sln.docstates
 
@@ -151,3 +152,5 @@ $RECYCLE.BIN/
 
 # Mac crap
 .DS_Store
+Source/GSA/GSA.v12.suo
+Source/GSA/Durability/test.cs

@@ -14,6 +14,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -51,33 +52,44 @@ namespace GSA.Durability
             // Create the button in the KSP AppLauncher
             if (this.launcherButton == null)
             {
-                GSA.Durability.Debug.Log("[GSA Durablity] VesselOverview->OnGUIApplicationLauncherReady: set _launcherButton");
-                launcherButton = ApplicationLauncher.Instance.AddModApplication(this.UIToggle, this.UIToggle,
-                                                                            this.UIHover, this.UIHoverOut,
-                                                                            null, null,
-                                                                            ApplicationLauncher.AppScenes.FLIGHT,
-                                                                            this.durabilityButtonIdle);
+                try
+                {
+                    GSA.Durability.Debug.Log("[GSA Durablity] VesselOverview->OnGUIApplicationLauncherReady: set _launcherButton");
+                    this.launcherButton = ApplicationLauncher.Instance.AddModApplication(this.UIToggle, this.UIToggle,
+                                                                                this.UIHover, this.UIHoverOut,
+                                                                                null, null,
+                                                                                ApplicationLauncher.AppScenes.FLIGHT,
+                                                                                this.durabilityButtonIdle);
+                }
+                catch (Exception ex)
+                {
+                    GSA.Durability.Debug.LogError("[GSA Durablity] VesselOverview->OnGUIApplicationLauncherReady: set _launcherButton ERROR:" + ex.Message);
+                }
             }
         }
 
         private void OnGUIApplicationLauncherDestroyed()
         {
+            GSA.Durability.Debug.Log("[GSA Durablity] VesselOverview->OnGUIApplicationLauncherDestroyed");
             LauncherButtonRemove();
         }
 
         public void UIToggle()
         {
+            GSA.Durability.Debug.Log("[GSA Durablity] VesselOverview->UIToggle");
             this.hideWindows = !this.hideWindows;
             this.isActiveWindows = !this.isActiveWindows;
         }
         public void UIHover()
         {
+            GSA.Durability.Debug.Log("[GSA Durablity] VesselOverview->UIHover");
             if (this.hideWindows)
                 this.hideWindows = false;
             this.isHoverButton = true;
         }
         public void UIHoverOut()
         {
+            GSA.Durability.Debug.Log("[GSA Durablity] VesselOverview->UIHoverOut");
             this.isHoverButton = false;
         }
 
@@ -151,6 +163,7 @@ namespace GSA.Durability
                 this.durabilityButtonError = GameDatabase.Instance.GetTexture("GermanSpaceAlliance/Icons/DurabilityToolbarIconError", false);
             }
 
+            OnGUIApplicationLauncherReady();
             GameEvents.onGUIApplicationLauncherReady.Add(OnGUIApplicationLauncherReady);
             GameEvents.onGUIApplicationLauncherDestroyed.Add(OnGUIApplicationLauncherDestroyed);
             GameEvents.onGUIApplicationLauncherUnreadifying.Add(OnGUIAppLauncherUnreadifying);
