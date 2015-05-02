@@ -1,6 +1,6 @@
 ﻿///////////////////////////////////////////////////////////////////////////////
 //
-//    Cooling a plugin for Kerbal Space Program from SQUAD
+//    Durability a plugin for Kerbal Space Program from SQUAD
 //    (https://www.kerbalspaceprogram.com/)
 //    and part of GSA Mod
 //    (http://www.kerbalspaceprogram.de)
@@ -50,10 +50,12 @@ namespace GSA.Cooling
         private Texture2D listIconWarn = new Texture2D(16, 16, TextureFormat.ARGB32, false);
         private Texture2D listIconCritical = new Texture2D(16, 16, TextureFormat.ARGB32, false);
 
-        protected Rect mainWindowPos = new Rect(Screen.width - 460f, 38f, 460f, 300f);
+        protected Rect mainWindowPos = new Rect(Screen.width - 460f, 38f, 460f, 320f);
 
         private Vector2 partListScroll = Vector2.zero;
         private Vector2 partDetailScroll = Vector2.zero;
+        private Vector2 temptListRightScroll = Vector2.zero;
+        private Vector2 temptListLEftScroll = Vector2.zero;
         private Part selectedPart;
 
         private void OnGUIApplicationLauncherReady()
@@ -183,6 +185,7 @@ namespace GSA.Cooling
                 listIconCritical = GameDatabase.Instance.GetTexture("GermanSpaceAlliance/Icons/ListStatusCritical", false);
             }
 
+            OnGUIApplicationLauncherReady();
             GameEvents.onGUIApplicationLauncherReady.Add(OnGUIApplicationLauncherReady);
             GameEvents.onGUIApplicationLauncherDestroyed.Add(OnGUIApplicationLauncherDestroyed);
             GameEvents.onGUIApplicationLauncherUnreadifying.Add(OnGUIAppLauncherUnreadifying);
@@ -204,11 +207,47 @@ namespace GSA.Cooling
         private void WindowGUI(int windowID)
         {
             GUILayout.BeginVertical();
-            GUILayout.BeginHorizontal();;
-            GUILayout.Label("Coolant Temp", labelTxtLeft, GUILayout.ExpandWidth(true));
+            GUILayout.BeginHorizontal();
+            temptListRightScroll = GUILayout.BeginScrollView(temptListRightScroll, false, false, GUILayout.Width(230f));
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Radiators In", labelTxtLeft, GUILayout.ExpandWidth(true));
+            GUILayout.Label(new GUIContent()
+            {
+                text = (TemperatureManager.Instance.CoolantTemperatureRadiatorsIn - 273.15f).ToString("0.00") + "° C"
+            }, labelTxtRight, GUILayout.ExpandWidth(true));
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Radiators Out", labelTxtLeft, GUILayout.ExpandWidth(true));
+            GUILayout.Label(new GUIContent()
+            {
+                text = (TemperatureManager.Instance.CoolantTemperatureRadiatorsOut - 273.15f).ToString("0.00") + "° C"
+            }, labelTxtRight, GUILayout.ExpandWidth(true));
+            GUILayout.EndHorizontal();
+            GUILayout.EndScrollView();
+
+            temptListLEftScroll = GUILayout.BeginScrollView(temptListLEftScroll, false, false, GUILayout.Width(205f));
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Parts In", labelTxtLeft, GUILayout.ExpandWidth(true));
+            GUILayout.Label(new GUIContent()
+            {
+                text = (TemperatureManager.Instance.CoolantTemperaturePartsIn - 273.15f).ToString("0.00") + "° C"
+            }, labelTxtRight, GUILayout.ExpandWidth(true));
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Parts Out", labelTxtLeft, GUILayout.ExpandWidth(true));
+            GUILayout.Label(new GUIContent()
+            {
+                text = (TemperatureManager.Instance.CoolantTemperaturePartsOut - 273.15f).ToString("0.00") + "° C"
+            }, labelTxtRight, GUILayout.ExpandWidth(true));
+            GUILayout.EndHorizontal();
+            GUILayout.EndScrollView();
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Flow Rate", labelTxtLeft, GUILayout.ExpandWidth(true));
 
             GUIContent contentCoolant = new GUIContent();
-            contentCoolant.text = TemperatureManager.Instance.CoolantTemp.ToString("0.00") + "° C";
+            contentCoolant.text = TemperatureManager.Instance.CoolantFlowRate.ToString("0.00");
             GUILayout.Label(contentCoolant, labelTxtRight, GUILayout.ExpandWidth(true));
 
             GUILayout.EndHorizontal();

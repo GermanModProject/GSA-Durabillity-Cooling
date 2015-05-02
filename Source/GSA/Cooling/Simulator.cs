@@ -18,7 +18,7 @@ using UnityEngine;
 
 namespace GSA.Cooling
 {
-    class Simulator
+    static class Simulator
     {
         public static float CalculateCoolantTemp()
         {

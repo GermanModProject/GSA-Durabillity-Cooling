@@ -251,12 +251,12 @@ namespace GSA.Durability
             if (this.part.Resources.Contains("Durability"))
             {
                 double difference = this.part.Resources["Durability"].maxAmount - this.part.Resources["Durability"].amount;
-                GSA.Durability.Debug.Log("GSA Durability: [RepairDamage]: Start Repair (" + difference.ToString("0.0000") + ")");
+                GSA.Debug.Log("GSA Durability: [RepairDamage]: Start Repair (" + difference.ToString("0.0000") + ")");
                 if (difference > 0)
                 {
                     this.part.Resources["Durability"].amount = this.part.Resources["Durability"].maxAmount;
                     double differenceP = difference / this.part.Resources["Durability"].maxAmount;
-                    GSA.Durability.Debug.Log("GSA Durability: [RepairDamage]: Repair differenceP (" + differenceP.ToString("0.0000") + ")");
+                    GSA.Debug.Log("GSA Durability: [RepairDamage]: Repair differenceP (" + differenceP.ToString("0.0000") + ")");
                     this.quality -= this.repairQualityReducer * differenceP;
                     if (this.maxRepair > 0)
                     {
@@ -275,7 +275,7 @@ namespace GSA.Durability
             }
             else
             {
-                GSA.Durability.Debug.Log("GSA Durability: [RepairDamage]: Resource Durability not Found");
+                GSA.Debug.Log("GSA Durability: [RepairDamage]: Resource Durability not Found");
             }
             setEventLabel();
             if (this.myWindow != null)
@@ -293,7 +293,7 @@ namespace GSA.Durability
             {
                 if (vpart.Modules.Contains("CoolingPumpModule"))
                 {
-                    GSA.Durability.Debug.Log("[GSA Durability] DurabilityModule->ToggleCooling: found CoolingPumpModule");
+                    GSA.Debug.Log("[GSA Durability] DurabilityModule->ToggleCooling: found CoolingPumpModule");
                     PartModule coolingPumpModule = vpart.Modules["CoolingPumpModule"];
                     coolingPumpModule.GetType().GetMethod("ReInitCooling").Invoke(coolingPumpModule, null);
                     break;
@@ -301,10 +301,21 @@ namespace GSA.Durability
             }
         }
 
+
         [KSPEvent(guiName = "Add Temp (Debug)", guiActive = true)]
         public void AddTemp()
         {
-            part.temperature += 10f;
+            part.temperature += 50f;
+        }
+
+        [KSPEvent(guiName = "Remove Temp (Debug)", guiActive = true)]
+        public void RemoveTemp()
+        {
+            part.temperature -= 50f;
+            if(part.temperature < 0)
+            {
+                part.temperature = 0;
+            }
         }
 
         #endregion //KSPEvent
@@ -326,8 +337,8 @@ namespace GSA.Durability
             }
             catch (Exception ex)
             {
-                GSA.Durability.Debug.LogError("GSA Durability: [OnAwake]: Message: " + ex.Message);
-                GSA.Durability.Debug.LogError("GSA Durability: [OnAwake]: StackTrace: " + ex.StackTrace);
+                GSA.Debug.LogError("GSA Durability: [OnAwake]: Message: " + ex.Message);
+                GSA.Debug.LogError("GSA Durability: [OnAwake]: StackTrace: " + ex.StackTrace);
             }
         }
 
@@ -337,7 +348,7 @@ namespace GSA.Durability
         /// <param name="state"></param>
         public override void OnStart(StartState state)
         {
-            GSA.Durability.Debug.Log("GSA Durability: [OnStart][" + state.ToString() + "]: " + this.name);
+            GSA.Debug.Log("GSA Durability: [OnStart][" + state.ToString() + "]: " + this.name);
             this.state = state;
 
             try
@@ -347,8 +358,8 @@ namespace GSA.Durability
             }
             catch (Exception ex)
             {
-                GSA.Durability.Debug.LogError("GSA Durability: [OnStart] set _initCost: Message: " + ex.Message);
-                GSA.Durability.Debug.LogError("GSA Durability: [OnStart] set _initCost: StackTrace: " + ex.StackTrace);
+                GSA.Debug.LogError("GSA Durability: [OnStart] set _initCost: Message: " + ex.Message);
+                GSA.Debug.LogError("GSA Durability: [OnStart] set _initCost: StackTrace: " + ex.StackTrace);
             }
 
             if (state == StartState.Editor)
@@ -384,8 +395,8 @@ namespace GSA.Durability
                 }
                 catch (Exception ex)
                 {
-                    GSA.Durability.Debug.LogError("GSA Durability: [OnStart] set _command: Message: " + ex.Message);
-                    GSA.Durability.Debug.LogError("GSA Durability: [OnStart] set _command: StackTrace: " + ex.StackTrace);
+                    GSA.Debug.LogError("GSA Durability: [OnStart] set _command: Message: " + ex.Message);
+                    GSA.Debug.LogError("GSA Durability: [OnStart] set _command: StackTrace: " + ex.StackTrace);
                 }
             }
 
@@ -397,35 +408,35 @@ namespace GSA.Durability
                 }
                 catch (Exception ex)
                 {
-                    GSA.Durability.Debug.LogError("GSA Durability: [OnStart] set _reactionWheel: Message: " + ex.Message);
-                    GSA.Durability.Debug.LogError("GSA Durability: [OnStart] set _reactionWheel: StackTrace: " + ex.StackTrace);
+                    GSA.Debug.LogError("GSA Durability: [OnStart] set _reactionWheel: Message: " + ex.Message);
+                    GSA.Debug.LogError("GSA Durability: [OnStart] set _reactionWheel: StackTrace: " + ex.StackTrace);
                 }
             }
 
             if (this.part.Modules.Contains("ModuleEngines"))
             {
-                GSA.Durability.Debug.Log("GSA Durability: [OnStart]: set _engine ");
+                GSA.Debug.Log("GSA Durability: [OnStart]: set _engine ");
                 try
                 {
                     this.engine = (ModuleEngines)this.part.Modules["ModuleEngines"];
                 }
                 catch (Exception ex)
                 {
-                    GSA.Durability.Debug.LogError("GSA Durability: [OnStart] set _engine: Message: " + ex.Message);
-                    GSA.Durability.Debug.LogError("GSA Durability: [OnStart] set _engine: StackTrace: " + ex.StackTrace);
+                    GSA.Debug.LogError("GSA Durability: [OnStart] set _engine: Message: " + ex.Message);
+                    GSA.Debug.LogError("GSA Durability: [OnStart] set _engine: StackTrace: " + ex.StackTrace);
                 }
             }
             if (this.part.Modules.Contains("ModuleScienceExperiment"))
             {
-                GSA.Durability.Debug.Log("GSA Durability: [OnStart]: set _scienceExperiment ");
+                GSA.Debug.Log("GSA Durability: [OnStart]: set _scienceExperiment ");
                 try
                 {
                     this.scienceExperiment = (ModuleScienceExperiment)this.part.Modules["ModuleScienceExperiment"];
                 }
                 catch (Exception ex)
                 {
-                    GSA.Durability.Debug.LogError("GSA Durability: [OnStart] set _scienceExperiment: Message: " + ex.Message);
-                    GSA.Durability.Debug.LogError("GSA Durability: [OnStart] set _scienceExperiment: StackTrace: " + ex.StackTrace);
+                    GSA.Debug.LogError("GSA Durability: [OnStart] set _scienceExperiment: Message: " + ex.Message);
+                    GSA.Debug.LogError("GSA Durability: [OnStart] set _scienceExperiment: StackTrace: " + ex.StackTrace);
                 }
             }
             CheckStatus();
@@ -437,15 +448,15 @@ namespace GSA.Durability
             if (this.isFirst)
             {
                 this.isFirst = false;
-                GSA.Durability.Debug.Log("GSA Durability: [OnUpdate]: Start First Update");
-                GSA.Durability.Debug.Log("GSA Durability: [OnUpdate]: vessel.missionTime: " + vessel.missionTime.ToString());
+                GSA.Debug.Log("GSA Durability: [OnUpdate]: Start First Update");
+                GSA.Debug.Log("GSA Durability: [OnUpdate]: vessel.missionTime: " + vessel.missionTime.ToString());
                 //Recalculate Durability
                 try
                 {
                     if (this.vessel.missionTime > 0 && this.lastUpdateTime > 0)
                     {
                         double reReduce = (this.vessel.missionTime - this.lastUpdateTime) * this.lastReduceRange;
-                        GSA.Durability.Debug.Log("GSA Durability: [OnUpdate]: recalculate Duability: " + reReduce.ToString("F0"));
+                        GSA.Debug.Log("GSA Durability: [OnUpdate]: recalculate Duability: " + reReduce.ToString("F0"));
                         if (this.part.Resources.Contains("Durability") && reReduce > 0)
                         {
                             this.part.Resources["Durability"].amount -= reReduce;
@@ -455,8 +466,8 @@ namespace GSA.Durability
                 }
                 catch (Exception ex)
                 {
-                    GSA.Durability.Debug.LogError("GSA Durability: [OnUpdate] Recalculate: Message: " + ex.Message);
-                    GSA.Durability.Debug.LogError("GSA Durability: [OnUpdate] Recalculate: StackTrace: " + ex.StackTrace);
+                    GSA.Debug.LogError("GSA Durability: [OnUpdate] Recalculate: Message: " + ex.Message);
+                    GSA.Debug.LogError("GSA Durability: [OnUpdate] Recalculate: StackTrace: " + ex.StackTrace);
                 }
             }
 
@@ -497,9 +508,9 @@ namespace GSA.Durability
                     double.TryParse(node.GetValue("lastReduceRange"), out this.lastReduceRange);
                 }
 
-                GSA.Durability.Debug.Log("GSA Durability: [OnLoad]: vessel.missionTime: " + this.vessel.missionTime.ToString());
-                GSA.Durability.Debug.Log("GSA Durability: [OnLoad]: lastReduceRange: " + this.lastReduceRange.ToString());
-                GSA.Durability.Debug.Log("GSA Durability: [OnLoad]: lastUpdateTime: " + this.lastUpdateTime.ToString());
+                GSA.Debug.Log("GSA Durability: [OnLoad]: vessel.missionTime: " + this.vessel.missionTime.ToString());
+                GSA.Debug.Log("GSA Durability: [OnLoad]: lastReduceRange: " + this.lastReduceRange.ToString());
+                GSA.Debug.Log("GSA Durability: [OnLoad]: lastUpdateTime: " + this.lastUpdateTime.ToString());
             }
             catch { }
         }
@@ -513,27 +524,27 @@ namespace GSA.Durability
                 {
                     double baseDamage = part.Resources["Durability"].maxAmount / 1000;
                     double reduce = 0;
-                    GSA.Durability.Debug.Log("GSA Durability: [OnCollisionEnter]: baseDamage: " + baseDamage.ToString("0.0000"));
+                    GSA.Debug.Log("GSA Durability: [OnCollisionEnter]: baseDamage: " + baseDamage.ToString("0.0000"));
                     if (this.part.Modules.Contains("ModuleLandingGear"))
                     {
                         baseDamage /= 3;
-                        GSA.Durability.Debug.Log("GSA Durability: [OnCollisionEnter]: ModuleLandingGear baseDamage: " + baseDamage.ToString("0.0000"));
+                        GSA.Debug.Log("GSA Durability: [OnCollisionEnter]: ModuleLandingGear baseDamage: " + baseDamage.ToString("0.0000"));
                     }
                     if (this.part.Modules.Contains("ModuleDockingNode"))
                     {
                         baseDamage /= 2;
-                        GSA.Durability.Debug.Log("GSA Durability: [ModuleDockingNode]: ModuleLandingGear baseDamage: " + baseDamage.ToString("0.0000"));
+                        GSA.Debug.Log("GSA Durability: [ModuleDockingNode]: ModuleLandingGear baseDamage: " + baseDamage.ToString("0.0000"));
                     }
 
                     if (collision.relativeVelocity.magnitude > baseValue * 90)
                     {
                         reduce = (collision.relativeVelocity.magnitude / baseValue) * baseDamage;
-                        GSA.Durability.Debug.Log("GSA Durability: [ModuleDockingNode]: reduce over 90: " + reduce.ToString("0.0000"));
+                        GSA.Debug.Log("GSA Durability: [ModuleDockingNode]: reduce over 90: " + reduce.ToString("0.0000"));
                     }
                     else
                     {
                         reduce = ((collision.relativeVelocity.magnitude / 2) / baseValue) * baseDamage;
-                        GSA.Durability.Debug.Log("GSA Durability: [ModuleDockingNode]: reduce under 90: " + reduce.ToString("0.0000"));
+                        GSA.Debug.Log("GSA Durability: [ModuleDockingNode]: reduce under 90: " + reduce.ToString("0.0000"));
                     }
                     this.part.Resources["Durability"].amount -= reduce;
                 }
@@ -584,7 +595,7 @@ namespace GSA.Durability
             {
                 if (this.part.Resources["Durability"].amount <= 0 && canExplode)
                 {
-                    GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: explode[canExplode] " + part.name);
+                    GSA.Debug.Log("GSA Durability: [checkStatus]: explode[canExplode] " + part.name);
                     this.part.Die();
                     this.part.explode();
                 }
@@ -596,30 +607,30 @@ namespace GSA.Durability
                         {
                             if (this.reactionWheel != null)
                             {
-                                GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: explode[canExplode] " + part.name);
+                                GSA.Debug.Log("GSA Durability: [checkStatus]: explode[canExplode] " + part.name);
                                 this.reactionWheel.wheelState = ModuleReactionWheel.WheelState.Broken;
                             }
                         }
                         catch (Exception ex)
                         {
-                            GSA.Durability.Debug.LogError("GSA Durability: [checkStatus]: ReactionWheel: " + ex.Message);
+                            GSA.Debug.LogError("GSA Durability: [checkStatus]: ReactionWheel: " + ex.Message);
                         }
 
                         try
                         {
                             if (this.engine != null)
                             {
-                                GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: _engine is not Null:");
+                                GSA.Debug.Log("GSA Durability: [checkStatus]: _engine is not Null:");
                                 if (!this.engine.engineShutdown)
                                 {
                                     this.engine.Events.Send(engine.Events["Shutdown"].id);
-                                    GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: engineShutdown = True");
+                                    GSA.Debug.Log("GSA Durability: [checkStatus]: engineShutdown = True");
                                 }
                             }
                         }
                         catch (Exception ex)
                         {
-                            GSA.Durability.Debug.LogError("GSA Durability: [checkStatus]: Engine: " + ex.Message);
+                            GSA.Debug.LogError("GSA Durability: [checkStatus]: Engine: " + ex.Message);
                         }
 
                         foreach (PartModule dModules in part.Modules)
@@ -627,11 +638,11 @@ namespace GSA.Durability
                             if (dModules.moduleName != "DurabilityModule")
                             {
                                 dModules.isEnabled = false;
-                                GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: isEnabled = False:  " + dModules.moduleName);
+                                GSA.Debug.Log("GSA Durability: [checkStatus]: isEnabled = False:  " + dModules.moduleName);
                             }
                         }
                         this.part.freeze();
-                        GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: freeze Part " + this.part.name);
+                        GSA.Debug.Log("GSA Durability: [checkStatus]: freeze Part " + this.part.name);
                     }
                     else if (this.part.Resources["Durability"].amount > minDurability && this.part.frozen)
                     {
@@ -645,22 +656,22 @@ namespace GSA.Durability
                             if (aModules.moduleName != "DurabilityModule")
                             {
                                 aModules.isEnabled = true;
-                                GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: isEnabled = True:  " + aModules.moduleName);
+                                GSA.Debug.Log("GSA Durability: [checkStatus]: isEnabled = True:  " + aModules.moduleName);
                             }
                         }
-                        GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: unfreeze Part " + this.part.name);
+                        GSA.Debug.Log("GSA Durability: [checkStatus]: unfreeze Part " + this.part.name);
                     }
                     if (part.Resources["Durability"].amount <= 0)
                     {
                         if (this.part.staticPressureAtm >= this.maxPressure)
                         {
                             this.part.explode();
-                            GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: explode[Pressure] " + this.part.name + "; this.part.staticPressureAtm :" + this.part.staticPressureAtm + "; this.maxPressure:" + this.maxPressure);
+                            GSA.Debug.Log("GSA Durability: [checkStatus]: explode[Pressure] " + this.part.name + "; this.part.staticPressureAtm :" + this.part.staticPressureAtm + "; this.maxPressure:" + this.maxPressure);
                         }
                         if (this.engine != null && this.quality == 0.01d)
                         {
                             this.part.explode();
-                            GSA.Durability.Debug.Log("GSA Durability: [checkStatus]: explode[engine] " + this.part.name);
+                            GSA.Debug.Log("GSA Durability: [checkStatus]: explode[engine] " + this.part.name);
                         }
                     }
                 }
@@ -706,8 +717,8 @@ namespace GSA.Durability
             }
             catch (Exception ex)
             {
-                GSA.Durability.Debug.LogError("GSA Durability: [setEventLabel]: Message: " + ex.Message);
-                GSA.Durability.Debug.LogError("GSA Durability: [setEventLabel]: StackTrace: " + ex.StackTrace);
+                GSA.Debug.LogError("GSA Durability: [setEventLabel]: Message: " + ex.Message);
+                GSA.Debug.LogError("GSA Durability: [setEventLabel]: StackTrace: " + ex.StackTrace);
             }
         }
 
@@ -781,8 +792,8 @@ namespace GSA.Durability
             }
             catch (Exception ex)
             {
-                GSA.Durability.Debug.LogError("GSA Durability: [reduceDurability]: Message: " + ex.Message);
-                GSA.Durability.Debug.LogError("GSA Durability: [reduceDurability]: StackTrace: " + ex.StackTrace);
+                GSA.Debug.LogError("GSA Durability: [reduceDurability]: Message: " + ex.Message);
+                GSA.Debug.LogError("GSA Durability: [reduceDurability]: StackTrace: " + ex.StackTrace);
             }
         }
 
@@ -800,7 +811,7 @@ namespace GSA.Durability
             }
             else
             {
-                GSA.Durability.Debug.Log("GSA Durability: [GetDurabilityPercent]: Resource Durability not Found");
+                GSA.Debug.Log("GSA Durability: [GetDurabilityPercent]: Resource Durability not Found");
             }
             return percent * 100;
         }
@@ -820,8 +831,8 @@ namespace GSA.Durability
             }
             catch (Exception ex)
             {
-                GSA.Durability.Debug.LogError("GSA Durability: [getExpirationDate]: Message: " + ex.Message);
-                GSA.Durability.Debug.LogError("GSA Durability: [getExpirationDate]: StackTrace: " + ex.StackTrace);
+                GSA.Debug.LogError("GSA Durability: [getExpirationDate]: Message: " + ex.Message);
+                GSA.Debug.LogError("GSA Durability: [getExpirationDate]: StackTrace: " + ex.StackTrace);
                 return -1;
             }
             return 0;
@@ -862,8 +873,8 @@ namespace GSA.Durability
             }
             catch (Exception ex)
             {
-                GSA.Durability.Debug.LogError("GSA Durability: [getFormatedExpirationDate]: Message: " + ex.Message);
-                GSA.Durability.Debug.LogError("GSA Durability: [getFormatedExpirationDate]: StackTrace: " + ex.StackTrace);
+                GSA.Debug.LogError("GSA Durability: [getFormatedExpirationDate]: Message: " + ex.Message);
+                GSA.Debug.LogError("GSA Durability: [getFormatedExpirationDate]: StackTrace: " + ex.StackTrace);
                 return "ERROR";
             }
         }
@@ -889,8 +900,8 @@ namespace GSA.Durability
             }
             catch (Exception ex)
             {
-                GSA.Durability.Debug.LogError("GSA Durability: [getReduceTemperature]: Message: " + ex.Message);
-                GSA.Durability.Debug.LogError("GSA Durability: [getReduceTemperature]: StackTrace: " + ex.StackTrace);
+                GSA.Debug.LogError("GSA Durability: [getReduceTemperature]: Message: " + ex.Message);
+                GSA.Debug.LogError("GSA Durability: [getReduceTemperature]: StackTrace: " + ex.StackTrace);
             }
             return additionalReduce;
         }
@@ -920,8 +931,8 @@ namespace GSA.Durability
             }
             catch (Exception ex)
             {
-                GSA.Durability.Debug.LogError("GSA Durability: [getReduceGeeForce]: Message: " + ex.Message);
-                GSA.Durability.Debug.LogError("GSA Durability: [getReduceGeeForce]: StackTrace: " + ex.StackTrace);
+                GSA.Debug.LogError("GSA Durability: [getReduceGeeForce]: Message: " + ex.Message);
+                GSA.Debug.LogError("GSA Durability: [getReduceGeeForce]: StackTrace: " + ex.StackTrace);
             }
             return additionalReduce;
         }
@@ -946,8 +957,8 @@ namespace GSA.Durability
             }
             catch (Exception ex)
             {
-                GSA.Durability.Debug.LogError("GSA Durability: [getReducePressure]: Message: " + ex.Message);
-                GSA.Durability.Debug.LogError("GSA Durability: [getReducePressure]: StackTrace: " + ex.StackTrace);
+                GSA.Debug.LogError("GSA Durability: [getReducePressure]: Message: " + ex.Message);
+                GSA.Debug.LogError("GSA Durability: [getReducePressure]: StackTrace: " + ex.StackTrace);
             }
             return additionalReduce;
         }
@@ -977,8 +988,8 @@ namespace GSA.Durability
             }
             catch (Exception ex)
             {
-                GSA.Durability.Debug.LogError("GSA Durability: [getReduceEngine]: Message: " + ex.Message);
-                GSA.Durability.Debug.LogError("GSA Durability: [getReduceEngine]: StackTrace: " + ex.StackTrace);
+                GSA.Debug.LogError("GSA Durability: [getReduceEngine]: Message: " + ex.Message);
+                GSA.Debug.LogError("GSA Durability: [getReduceEngine]: StackTrace: " + ex.StackTrace);
             }
             return additionalReduce;
         }
@@ -996,7 +1007,7 @@ namespace GSA.Durability
                     if (this.scienceExperiment.Deployed && !this.expDeployed)
                     {
                         expDeployed = true;
-                        GSA.Durability.Debug.Log("GSA Durability: [getReduceExperiment]");
+                        GSA.Debug.Log("GSA Durability: [getReduceExperiment]");
 
                         int minRange = (int)Math.Round(5 * (2 - this.quality));
                         int maxRange = (int)Math.Round(35 * (2 - this.quality));
@@ -1009,8 +1020,8 @@ namespace GSA.Durability
             }
             catch (Exception ex)
             {
-                GSA.Durability.Debug.LogError("GSA Durability: [getReduceExperiment]: Message: " + ex.Message);
-                GSA.Durability.Debug.LogError("GSA Durability: [getReduceExperiment]: StackTrace: " + ex.StackTrace);
+                GSA.Debug.LogError("GSA Durability: [getReduceExperiment]: Message: " + ex.Message);
+                GSA.Debug.LogError("GSA Durability: [getReduceExperiment]: StackTrace: " + ex.StackTrace);
             }
         }
 
@@ -1064,15 +1075,15 @@ namespace GSA.Durability
                     catch (Exception ex)
                     {
                         //displaySun = "Error drow line";
-                        GSA.Durability.Debug.LogError("GSA Durability: [getReduceRadiation]: Message: " + ex.Message);
+                        GSA.Debug.LogError("GSA Durability: [getReduceRadiation]: Message: " + ex.Message);
                     }
                 }
                 this.displaySun = radiationMutli.ToString("0.0000");
             }
             catch (Exception ex)
             {
-                GSA.Durability.Debug.LogError("GSA Durability: [getReduceRadiation]: Message: " + ex.Message);
-                GSA.Durability.Debug.LogError("GSA Durability: [getReduceRadiation]: StackTrace: " + ex.StackTrace);
+                GSA.Debug.LogError("GSA Durability: [getReduceRadiation]: Message: " + ex.Message);
+                GSA.Debug.LogError("GSA Durability: [getReduceRadiation]: StackTrace: " + ex.StackTrace);
             }
             return additionalReduce;
         }

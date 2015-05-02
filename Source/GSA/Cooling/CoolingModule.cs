@@ -23,8 +23,23 @@ namespace GSA.Cooling
     /// <summary>
     /// Cooling Pump and cooleant
     /// </summary>
-    public class CoolingModule : Part
-    {        
-        
+    public class CoolingModule : PartModule
+    {
+        /// <summary>
+        /// Display Temperature
+        /// </summary>
+        [KSPField(isPersistant = false, guiActive = false, guiName = "Temperature", guiUnits = "° K", guiFormat = "F")]
+        public string displayTemperature;
+
+        /// <summary>
+        /// Display Temperature in c°
+        /// </summary>
+        [KSPField(isPersistant = false, guiActive = true, guiName = "Temperature", guiUnits = "° C", guiFormat = "F")]
+        public string displayTemperatureCelcius;
+
+        public override void OnAwake()
+        {
+            this.moduleName = "";
+        }
     }
 }

@@ -20,7 +20,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace GSA.Durability
+namespace GSA
 {
     static class Debug
     {
@@ -48,24 +48,20 @@ namespace GSA.Durability
 
         public static void LogWarning(object message)
         {
-            if (debug)
-                UnityEngine.Debug.LogWarning(message);
+            UnityEngine.Debug.LogWarning(message);
         }
         public static void LogWarning(object message, UnityEngine.Object context)
         {
-            if (debug)
-                UnityEngine.Debug.LogWarning(message, context);
+            UnityEngine.Debug.LogWarning(message, context);
         }
 
         public static void LogException(Exception exception)
         {
-            if (debug)
-                UnityEngine.Debug.LogException(exception);
+            UnityEngine.Debug.LogException(exception);
         }
         public static void LogException(Exception exception, UnityEngine.Object context)
         {
-            if (debug)
-                UnityEngine.Debug.LogException(exception, context);
+            UnityEngine.Debug.LogException(exception, context);
         }
     }
 }
