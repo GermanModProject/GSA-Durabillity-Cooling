@@ -92,7 +92,7 @@ namespace GSA.Cooling
             float currentPowerState = GetOptimalPowerState();
             foreach (CoolingPumpModule pump in TemperatureManager.Instance.CoolingPumpModuleList)
             {
-                if (!pump.part.frozen)
+                if (!pump.part.frozen && pump.part.isActiveAndEnabled)
                 {
                     pump.PowerState = currentPowerState;
                     currentFlowRate += pump.maxFlowRate * currentPowerState;
@@ -108,10 +108,10 @@ namespace GSA.Cooling
         public static float GetOptimalPowerState()
         {
             float currentPowerState = 0;
-            //if (TemperatureManager.Instance.PriorityList.Count > 0 || TemperatureManager.Instance.CoolantTemperature > 0)
-            //{
+            if (TemperatureManager.Instance.PriorityList.Count > 0 || TemperatureManager.Instance.CoolantTemperatureRadiatorsIn > TemperatureManager.Instance.Vessel.externalTemperature)
+            {
                 currentPowerState = 1;
-            //}
+            }
             return currentPowerState;
         }
 
@@ -119,13 +119,12 @@ namespace GSA.Cooling
         {
             if (part.temperature > coolantInTemperature)
             {
-                float coolantFlowRate = TemperatureManager.Instance.CoolantFlowRate;
-                double coolingRate = ((part.temperature - coolantInTemperature)) * Time.deltaTime;
-                double coolingRateMass = coolingRate / part.mass;
+                double coolingRate = (part.temperature - coolantInTemperature) * Time.deltaTime;
+                double coolingRateMass = coolingRate / (part.mass * 1000);
                 double coolingRateFinal = coolingRateMass * TemperatureManager.Instance.CoolantFlowRate;
                 part.temperature -= coolingRateFinal;
 
-                coolantInTemperature += coolingRateFinal;
+                coolantInTemperature += coolingRateFinal * (part.mass * 1000);
             }
             return coolantInTemperature;
         }

@@ -42,12 +42,11 @@ namespace GSA.Cooling
             {
                 GSA.Debug.Log("[GSA Cooling] TemperatureManagerAddon->Update RunOnce");
                 vessel = FlightGlobals.ActiveVessel;
-                TemperatureManager.Instance.SetVessel(vessel);
+                TemperatureManager.Instance.Vessel = vessel;
                 //UpdatePriority();
                 //GSA.Debug.Log("[GSA Cooling] TemperatureManagerAddon->Update RunOnce _lastUpdate" + _lastUpdate.ToString("0.00000"));
                 runOnce = false;
             }
-
 
             lastUpdate += Time.deltaTime;
             if (lastUpdate >= updateFrequency && !look && !runOnce)

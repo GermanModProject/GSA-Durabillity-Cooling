@@ -31,19 +31,7 @@ namespace GSA.Cooling
         /// </summary>
         [KSPField(isPersistant = true, guiActive = false, guiName = "Max coolings Part")]
         public int maxCoolingParts = 10;
-
-        /// <summary>
-        /// coolant temperature (Kelvin)
-        /// </summary>
-        [KSPField(isPersistant = true, guiActive = false)]
-        public double coolantTemperature = 0;
-
-        /// <summary>
-        /// coolant temperature (display in Celcius)
-        /// </summary>
-        [KSPField(isPersistant = false, guiActive = true, guiName = "Coolant Temp", guiUnits = "° C")]
-        public string coolantTemperatureCelcius;
-
+        
         /// <summary>
         /// coolant temperature Radiators In
         /// </summary>
@@ -124,12 +112,12 @@ namespace GSA.Cooling
 
         public override void OnUpdate()
         {
-            //this.coolantTemperature = TemperatureManager.Instance.CoolantTemperature;
-            this.coolantTemperatureCelcius = (this.coolantTemperature - 273.15d).ToString("0.00");
             this.CoolantTemperaturePartsIn = (TemperatureManager.Instance.CoolantTemperaturePartsIn - 273.15d).ToString("0.00");
             this.CoolantTemperaturePartsOut = (TemperatureManager.Instance.CoolantTemperaturePartsOut - 273.15d).ToString("0.00");
             this.CoolantTemperatureRadiatorsIn = (TemperatureManager.Instance.CoolantTemperatureRadiatorsIn - 273.15d).ToString("0.00");
             this.CoolantTemperatureRadiatorsOut = (TemperatureManager.Instance.CoolantTemperatureRadiatorsOut - 273.15d).ToString("0.00");
+
+            part.RequestResource("ElectricCharge", (this.maxElectricChargeRate * this.currentPowerState), ResourceFlowMode.STAGE_PRIORITY_FLOW);
         }
 
         public override void OnInactive()

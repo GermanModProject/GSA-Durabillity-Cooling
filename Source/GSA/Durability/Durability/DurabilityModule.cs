@@ -722,6 +722,11 @@ namespace GSA.Durability
             }
         }
 
+        private void CheckTemperature()
+        {
+
+        }
+
         /// <summary>
         /// Reduce durability
         /// </summary>

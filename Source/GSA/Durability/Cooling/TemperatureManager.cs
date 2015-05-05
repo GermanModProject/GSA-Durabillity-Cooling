@@ -15,6 +15,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 using GSA.Durability;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,7 +32,7 @@ namespace GSA.Cooling
     public class TemperatureManager
     {
         private static volatile TemperatureManager instance;
-        private static object syncRoot = new Object();
+        private static object syncRoot = new System.Object();
 
         public static TemperatureManager Instance
         {
@@ -99,6 +100,13 @@ namespace GSA.Cooling
             this.CoolantTemperaturePartsOut = -1;
             this.CoolantTemperatureRadiatorsIn = -1;
             this.CoolantTemperatureRadiatorsOut = -1;
+
+            GameEvents.onVesselDestroy.Add(OnVesselDestroy);
+        }
+
+        public void OnVesselDestroy(UnityEngine.Object obj)
+        {
+            this.Reset();
         }
 
         public void UpdateFlowRate()
@@ -106,11 +114,28 @@ namespace GSA.Cooling
             CoolantFlowRate = Simulator.CalculateCoolantFlowRate();
         }
 
+        [Obsolete("SetVessel is deprecated, please use TemperatureManager.Vessel instead.")]
         public void SetVessel(Vessel vessel)
         {
-            GSA.Debug.Log("[GSA Cooling] TemperatureManager->SetVessel: " + vessel.name);
-            this.vessel = vessel;
-            FindPartsToBoCooled();
+            this.Vessel = vessel;
+        }
+
+        /// <summary>
+        /// Return Current Vessel
+        /// </summary>
+        /// <returns></returns>
+        public Vessel Vessel
+        {
+            get
+            {
+                return this.vessel;
+            }
+            set
+            {
+                GSA.Debug.Log("[GSA Cooling] TemperatureManager->SetVessel: " + value.name);
+                this.vessel = value;
+                this.FindPartsToBoCooled();
+            }
         }
 
         public void AddCoolingPumpModule(CoolingPumpModule coolingPumpModule)
@@ -147,25 +172,6 @@ namespace GSA.Cooling
                 CoolingRadiatorModuleList.Remove(coolingRadiatorModule);
                 CoolantAmount -= coolingRadiatorModule.coolantAmount;
             }
-        }
-
-        /// <summary>
-        /// Get average coolant Temperatur
-        /// </summary>
-        /// <returns></returns>
-        public double GetCoolantTemperature()
-        {
-            double temp = 0;
-            if (this.CoolingPumpModuleList != null)
-            {
-                foreach (CoolingPumpModule cpm in this.CoolingPumpModuleList)
-                {
-                    temp += cpm.coolantTemperature;
-                }
-
-                temp = temp / this.CoolingPumpModuleList.Count;
-            }
-            return temp;
         }
 
         /// <summary>
@@ -242,6 +248,22 @@ namespace GSA.Cooling
                     this.look = false;
                 }
             }
+        }
+
+        /// <summary>
+        /// Reset Manager
+        /// </summary>
+        public void Reset()
+        {
+            this.CoolantAmount = 0;
+            this.CoolantFlowRate = 0;
+            this.CoolantTemperaturePartsIn = 273.15d;
+            this.CoolantTemperatureRadiatorsOut = 273.15d;
+            this.CoolantTemperaturePartsIn = 273.15d;
+            this.CoolantTemperatureRadiatorsOut = 273.15d;
+            this.CoolingPumpModuleList.Clear();
+            this.CoolingRadiatorModuleList.Clear();
+            this.CoolingParts.Clear();
         }
 
 
@@ -334,15 +356,24 @@ namespace GSA.Cooling
                 this.CoolantTemperaturePartsIn = this.CoolantTemperatureRadiatorsOut - (this.CoolantFlowRate) * 10;
                 foreach (KeyValuePair<float, Part> coolingPart in priorityList.Reverse())
                 {
-                    this.CoolantTemperaturePartsOut = Simulator.CalculatePartCooling(coolingPart.Value, this.CoolantTemperaturePartsIn);
-                    loop++;
-                    if (loop >= maxCoolingParts)
+                    if (coolingPart.Key > 0)
                     {
-                        break;
+                        this.CoolantTemperaturePartsOut = Simulator.CalculatePartCooling(coolingPart.Value, this.CoolantTemperaturePartsIn);
+                        loop++;
+                        if (loop >= maxCoolingParts)
+                        {
+                            break;
+                        }
                     }
                 }
-                //this.CoolantTemperaturePartsOut = this.CoolantTemperaturePartsIn + 5;
-                this.CoolantTemperatureRadiatorsIn = this.CoolantTemperaturePartsOut + (this.CoolantFlowRate) * 10;
+                if (loop == 0)
+                {
+                    this.CoolantTemperatureRadiatorsIn = this.CoolantTemperatureRadiatorsOut;
+                }
+                else
+                {
+                    this.CoolantTemperatureRadiatorsIn = this.CoolantTemperaturePartsOut + (this.CoolantFlowRate) * 10;
+                }
             }
         }
 
